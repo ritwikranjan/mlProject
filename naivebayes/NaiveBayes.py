@@ -5,6 +5,9 @@ import pandas as pd
 
 class NaiveBayes:
 
+    vocab_length: int
+    cats_info: np.ndarray
+
     def __init__(self, unique_classes):
         self.classes = unique_classes  # Constructor is simply passed with unique number of classes of the training set
         self.bow_dicts = np.array([defaultdict(lambda: 0) for _ in range(self.classes.shape[0])])
@@ -22,6 +25,10 @@ class NaiveBayes:
             ---------
             Nothing
        """
+
+        print(example)
+        if isinstance(example, np.ndarray):
+            example = example[0]
 
         for token_word in example.split():  # for every word in preprocessed example
             self.bow_dicts[dict_index][token_word] += 1  # increment in its count
@@ -42,8 +49,8 @@ class NaiveBayes:
 
         # constructing BoW for each category
         for cat_index, cat in enumerate(self.classes):
-            all_cat_examples = x_train[y_train == cat]  # filter all examples of category == cat
-            cleaned_examples = pd.DataFrame(all_cat_examples)
+            # filter all examples of category == cat
+            cleaned_examples = pd.DataFrame(x_train[y_train == cat])
 
             # now construct BoW of this particular category
             np.apply_along_axis(self.addToBow, 1, cleaned_examples, cat_index)
@@ -53,7 +60,7 @@ class NaiveBayes:
         '''
             Although we are done with the training of Naive Bayes Model BUT!!!!!!
             ------------------------------------------------------------------------------------
-            Remember The Test Time Formula ? : {for each word w [ count(w|c)+1 ] / [ count(c) + |V| + 1 ] } * p(c)
+            The Test Time Formula : {for each word w [ count(w|c)+1 ] / [ count(c) + |V| + 1 ] } * p(c)
             ------------------------------------------------------------------------------------
 
             We are done with constructing of BoW for each category. But we need to precompute a few 
@@ -95,8 +102,8 @@ class NaiveBayes:
         self.vocab_length = vocab.shape[0]
 
         # computing denominator value
-        denom = np.array(
-            [cat_word_counts[cat_index] + self.vocab_length + 1 for cat_index, cat in enumerate(self.classes)])
+        denom = np.array([cat_word_counts[cat_index] + self.vocab_length
+                          for cat_index, cat in enumerate(self.classes)])
 
         '''
             Now that we have everything precomputed as well, its better to organize everything in a tuple 
@@ -133,7 +140,7 @@ class NaiveBayes:
 
                 ####################################################################################
 
-                # This loop computes : for each word w [ count(w|c)+1 ] / [ count(c) + |V| + 1 ]
+                # This loop computes : for each word w [ count(w|c)+1 ] / [ count(c) + |V| ]
 
                 ####################################################################################
 
